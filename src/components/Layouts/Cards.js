@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Col, Card } from "react-bootstrap";
 import { useCart } from "../../context/CartContext"; // Access cart context
 import CardModal from "../CardModal"; // Import the modal component
+import { toast } from "react-toastify";
 
 function Cards({
   id,
@@ -17,9 +18,17 @@ function Cards({
   const { addToCart } = useCart(); // Access addToCart function from context
 
   const handleAddToCart = () => {
+    const notify = () => {
+      toast.success("Item added to cart!", {
+        className: "custom-toast",
+      });
+    };
+
     const item = { image, rating, title, paragraph, price, id, quantity };
     addToCart(item);
     setShowModal(false); // Close the modal after adding to cart
+    // toast.success("Item added to cart!");
+    notify();
   };
 
   const incrementQuantity = () => setQuantity(quantity + 1);
