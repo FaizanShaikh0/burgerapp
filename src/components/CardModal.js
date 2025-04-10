@@ -42,7 +42,11 @@ const CardModal = ({
           backgroundColor: "#fff",
         }}
       >
-        <Modal.Header closeButton onClick={onClose} style={{ borderBottom: "1px solid #ddd" }}>
+        <Modal.Header
+          closeButton
+          onClick={onClose}
+          style={{ borderBottom: "1px solid #ddd" }}
+        >
           <Modal.Title style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
             {data?.title}
           </Modal.Title>
@@ -51,11 +55,17 @@ const CardModal = ({
         <Modal.Body style={{ padding: "20px 0" }}>
           <div className="modal-content">
             <div className="image-container" style={{ textAlign: "center" }}>
-              <img src={data?.image} alt={data?.title} className="modal-image" />
+              <img
+                src={data?.image}
+                alt={data?.title}
+                className="modal-image"
+              />
             </div>
             <p style={{ fontSize: "1rem", color: "#555" }}>{data?.paragraph}</p>
-            <h5 style={{ fontSize: "1.2rem", color: "#333", fontWeight: "bold" }}>
-              Total: {totalPrice} -/Rs
+            <h5
+              style={{ fontSize: "1.2rem", color: "#333", fontWeight: "bold" }}
+            >
+              Total: ₹ {totalPrice}
             </h5>
           </div>
         </Modal.Body>

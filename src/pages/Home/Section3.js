@@ -290,6 +290,7 @@ const Section3 = forwardRef((props, ref) => {
             </p>
           </Col>
         </Row>
+        
         <Row className="mb-4">
           <Col lg={{ span: 4, offset: 4 }} md={{span: 6, offset: 3}}>
             <div className="position-relative">

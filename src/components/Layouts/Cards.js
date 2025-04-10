@@ -54,7 +54,7 @@ function Cards({
 
             <div className="d-flex align-items-center justify-content-between">
               <div className="menu_price">
-                <h5 className="mb-0">${price}</h5>
+                <h5 className="mb-0">₹ {price}</h5>
               </div>
               <div className="add_to_cart">
                 <button

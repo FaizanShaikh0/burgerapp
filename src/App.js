@@ -3,17 +3,19 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./context/CartContext"; // Import the CartProvider
 import Home from "./pages/Home/Home";
 import Cart from "./pages/Cart";
-import { ToastContainer } from "react-toastify";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
+import CheckoutForm from "./pages/CheckoutForm ";
 
 function App() {
   return (
     <CartProvider>
       <Router>
-        <ToastContainer />
 
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout-success" element={<CheckoutSuccess />} />
+          <Route path="/checkout-page" element={<CheckoutForm />} />
         </Routes>
       </Router>
     </CartProvider>

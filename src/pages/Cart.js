@@ -1,13 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { Col, Container, Row, Button, Card, Badge } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaTrash, FaArrowLeft } from "react-icons/fa";
 import emptyCartAnimation from "../assets/EmptyCart.json";
 import Lottie from "lottie-react";
 import "../styles/Cart.css";
 
 const Cart = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate(); // Get the navigate function
+
   const { cartItems, updateQuantity, removeFromCart, getTotalPrice } =
     useCart();
 
@@ -19,18 +22,25 @@ const Cart = () => {
   }, []);
 
   // Function to handle quantity change
-  const handleQuantityChange = (id, action) => {
-    const item = cartItems.find((item) => item.id === id);
-    if (!item) return;
+  const handleQuantityChange = async (id, action) => {
+    setIsLoading(true);
+    try {
+      const item = cartItems.find((item) => item.id === id);
+      if (!item) return;
 
-    let newQuantity = item.quantity;
-    if (action === "increase") {
-      newQuantity += 1;
-    } else if (action === "decrease" && item.quantity > 1) {
-      newQuantity -= 1;
+      let newQuantity = item.quantity;
+      if (action === "increase") {
+        newQuantity += 1;
+      } else if (action === "decrease" && item.quantity > 1) {
+        newQuantity -= 1;
+      }
+
+      await updateQuantity(id, newQuantity);
+    } catch (error) {
+      console.error("Failed to update quantity", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    updateQuantity(id, newQuantity);
   };
 
   // Function to handle item removal
@@ -40,6 +50,11 @@ const Cart = () => {
 
   const totalPrice = getTotalPrice() || 0;
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Function to handle checkout
+  const handleCheckout = () => {
+    navigate('/checkout-page'); // Redirect to the checkout form
+  };
 
   return (
     <div className="cart-container py-4">
@@ -114,14 +129,14 @@ const Cart = () => {
                       <Col xs={6} md={2} className="text-md-center">
                         <span className="d-md-none text-muted">Price: </span>
                         <span className="fw-bold">
-                          ${item.price.toFixed(2)}
+                          ₹ {item.price.toFixed(2)}
                         </span>
                       </Col>
 
-                      <Col xs={6} md={3} className="text-end text-md-center">
+                      <Col xs={6} md={2} className="text-end text-md-center">
                         <div className="quantity-controls d-inline-flex">
                           <button
-                            disabled={item.quantity <= 1}
+                            disabled={item.quantity <= 1 || isLoading}
                             onClick={() =>
                               handleQuantityChange(item.id, "decrease")
                             }
@@ -134,6 +149,7 @@ const Cart = () => {
                             {item.quantity}
                           </span>
                           <button
+                            disabled={isLoading}
                             onClick={() =>
                               handleQuantityChange(item.id, "increase")
                             }
@@ -152,13 +168,13 @@ const Cart = () => {
                       >
                         <span className="d-md-none text-muted">Total: </span>
                         <span className="fw-bold">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ₹ {(item.price * item.quantity).toFixed(2)}
                         </span>
                       </Col>
 
                       <Col
                         xs={6}
-                        md={1}
+                        md={2}
                         className="mt-3 mt-md-0 text-end text-md-center"
                       >
                         <Button
@@ -167,6 +183,7 @@ const Cart = () => {
                           onClick={() => handleRemoveItem(item.id)}
                           aria-label="Remove item"
                           className="remove-button"
+                          disabled={isLoading}
                         >
                           <FaTrash />
                         </Button>
@@ -186,14 +203,17 @@ const Cart = () => {
 
                 <div className="d-flex justify-content-between mb-2">
                   <p className="mb-0">Items:</p>
-                  <Badge bg="primary" className="rounded-pill">
+                  <Badge
+                    bg="primary"
+                    className="rounded-pill d-flex align-items-center justify-content-center"
+                  >
                     {totalItems}
                   </Badge>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2">
                   <p className="mb-0">Subtotal:</p>
-                  <p className="mb-0 fw-bold">${totalPrice.toFixed(2)}</p>
+                  <p className="mb-0 fw-bold">₹ {totalPrice.toFixed(2)}</p>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2">
@@ -205,11 +225,11 @@ const Cart = () => {
 
                 <div className="d-flex justify-content-between mb-4">
                   <h5 className="mb-0">Total:</h5>
-                  <h5 className="mb-0 fw-bold">${totalPrice.toFixed(2)}</h5>
+                  <h5 className="mb-0 fw-bold">₹ {totalPrice.toFixed(2)}</h5>
                 </div>
 
                 <div className="d-grid gap-2">
-                  <Button variant="warning" className="mb-2 fw-bold">
+                  <Button variant="warning" className="mb-2 fw-bold" onClick={handleCheckout}>
                     PROCEED TO CHECKOUT
                   </Button>
                   <Link to="/" className="btn btn-outline-secondary">

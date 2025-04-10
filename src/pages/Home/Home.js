@@ -9,6 +9,8 @@ import Section5 from "./Section5";
 import Section6 from "./Section6";
 import Section7 from "./Section7";
 
+import { ToastContainer } from "react-toastify";
+
 const Home = () => {
   // Create refs for each section
   const section1Ref = useRef(null);
@@ -21,7 +23,7 @@ const Home = () => {
 
   // Function to scroll to a specific section
   const scrollToSection = (ref) => {
-    ref.current.scrollIntoView({ behavior: "smooth"});
+    ref.current.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -38,6 +40,8 @@ const Home = () => {
           section7Ref,
         }}
       >
+        <ToastContainer />
+
         {/* Home Section Hero Banner */}
         <Section1 ref={section1Ref} />
 
