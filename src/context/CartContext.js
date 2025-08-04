@@ -9,7 +9,7 @@ export const useCart = () => {
 
 // Cart provider component
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]); // Store cart items in the state
+  const [cartItems, setCartItems] = useState([]);
 
   // Add item to the cart
   const addToCart = (item) => {
@@ -53,9 +53,22 @@ export const CartProvider = ({ children }) => {
     setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
+  // Clear entire cart
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, getTotalPrice, updateQuantity, removeFromCart }}
+      value={{
+        cartItems,
+        setCartItems,
+        addToCart,
+        getTotalPrice,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+      }}
     >
       {children}
     </CartContext.Provider>

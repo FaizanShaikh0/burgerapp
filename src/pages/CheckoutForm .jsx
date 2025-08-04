@@ -11,9 +11,10 @@ import {
   Col,
 } from "reactstrap";
 import { useNavigate } from "react-router-dom";
-// import Layout from "../components/Layouts/Layout";
+import { useCart } from "../context/CartContext";
 
 const CheckoutForm = () => {
+  const { cartItems, getTotalPrice, setCartItems } = useCart();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -22,11 +23,7 @@ const CheckoutForm = () => {
     city: "",
     state: "",
     zip: "",
-    paymentMethod: "creditCard",
-    cardNumber: "",
-    cvv: "",
-    expiryDate: "",
-    password: "",
+    paymentMethod: "cod",
   });
   const [formErrors, setFormErrors] = useState({});
   const navigate = useNavigate();
@@ -40,10 +37,10 @@ const CheckoutForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   const validateForm = () => {
@@ -55,25 +52,92 @@ const CheckoutForm = () => {
     if (!formData.city) errors.city = "City is required";
     if (!formData.state) errors.state = "State is required";
     if (!formData.zip) errors.zip = "Zip code is required";
-    if (!formData.cardNumber) errors.cardNumber = "Card number is required";
-    if (!formData.cvv) errors.cvv = "CVV is required";
-    if (!formData.expiryDate) errors.expiryDate = "Expiry date is required";
-    if (!formData.password) errors.password = "Password is required";
     return errors;
+  };
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validateForm();
-    if (Object.keys(errors).length === 0) {
-      try {
-        console.log("Submitting form data:", formData);
-        navigate("/checkout-success");
-      } catch (error) {
-        console.error("Checkout failed", error);
-      }
-    } else {
+    if (Object.keys(errors).length !== 0) {
       setFormErrors(errors);
+      return;
+    }
+
+    if (formData.paymentMethod === "cod") {
+      console.log("Order submitted (COD):", {
+        customer: formData,
+        cart: cartItems,
+        total: getTotalPrice(),
+      });
+      setCartItems([]);
+      navigate("/checkout-success");
+      return;
+    }
+
+    const res = await loadRazorpayScript();
+    if (!res) {
+      alert("Razorpay SDK failed to load.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer: formData,
+          cartItems,
+          total: getTotalPrice(),
+        }),
+      });
+
+      const data = await response.json();
+
+      const options = {
+        key: "rzp_test_6ngYWdyTKfuvpE",
+        amount: data.razorpayOrder.amount,
+        currency: "INR",
+        name: `${formData.firstName} ${formData.lastName}`,
+        description: "Food Order",
+        order_id: data.razorpayOrder.id,
+        handler: async function (response) {
+          // Verify signature
+          await fetch("http://localhost:5000/api/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              orderId: data.orderId,
+            }),
+          });
+
+          setCartItems([]);
+          navigate("/checkout-success");
+        },
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+        },
+        theme: { color: "#3399cc" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Payment init failed", err);
+      alert("Payment setup failed");
     }
   };
 
@@ -84,9 +148,9 @@ const CheckoutForm = () => {
           <h2 className="mb-4">Checkout</h2>
         </Col>
       </Row>
-      <Row>
-        <Col md={7} className="me-auto">
-          <Form onSubmit={handleSubmit} className="p-5 shadow bg-white rounded">
+      <Form onSubmit={handleSubmit} className="p-5 shadow bg-white rounded">
+        <Row>
+          <Col md={7}>
             <Row>
               <Col md={6}>
                 <FormGroup>
@@ -206,11 +270,9 @@ const CheckoutForm = () => {
                 </FormGroup>
               </Col>
             </Row>
-          </Form>
-        </Col>
+          </Col>
 
-        <Col md={5} className="me-auto">
-          <Form onSubmit={handleSubmit} className="p-5 shadow bg-white rounded">
+          <Col md={5}>
             <FormGroup>
               <Label for="paymentMethod">Payment Method</Label>
               <Input
@@ -221,85 +283,18 @@ const CheckoutForm = () => {
                 onChange={handleChange}
                 className="mb-3"
               >
-                <option value="creditCard">Credit Card</option>
-                <option value="paypal">PayPal</option>
-                <option value="bankTransfer">Bank Transfer</option>
+                <option value="cod">Cash on Delivery</option>
+                <option value="razorpay">Pay Online (Razorpay)</option>
+                <option value="upi">UPI at Delivery</option>
+                <option value="qr">Pay with QR at Delivery</option>
               </Input>
             </FormGroup>
-
-            <Row>
-              <Col md={6}>
-                <FormGroup>
-                  <Label for="cardNumber">Card Number</Label>
-                  <Input
-                    type="number"
-                    name="cardNumber"
-                    id="cardNumber"
-                    value={formData.cardNumber}
-                    onChange={handleChange}
-                    invalid={!!formErrors.cardNumber}
-                    className="mb-3"
-                  />
-                  {formErrors.cardNumber && (
-                    <FormText color="danger">{formErrors.cardNumber}</FormText>
-                  )}
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label for="cvv">CVV Number</Label>
-                  <Input
-                    type="text"
-                    name="cvv"
-                    id="cvv"
-                    value={formData.cvv}
-                    onChange={handleChange}
-                    invalid={!!formErrors.cvv}
-                    className="mb-3"
-                  />
-                  {formErrors.cvv && (
-                    <FormText color="danger">{formErrors.cvv}</FormText>
-                  )}
-                </FormGroup>
-              </Col>
-            </Row>
-            <FormGroup>
-              <Label for="expiryDate">Expiry Date</Label>
-              <Input
-                type="date"
-                name="expiryDate"
-                id="expiryDate"
-                value={formData.expiryDate}
-                onChange={handleChange}
-                invalid={!!formErrors.expiryDate}
-                className="mb-3"
-              />
-              {formErrors.expiryDate && (
-                <FormText color="danger">{formErrors.expiryDate}</FormText>
-              )}
-            </FormGroup>
-            <FormGroup>
-              <Label for="password">Password</Label>
-              <Input
-                type="password"
-                name="password"
-                id="password"
-                value={formData.password}
-                onChange={handleChange}
-                invalid={!!formErrors.password}
-                className="mb-3"
-              />
-              {formErrors.password && (
-                <FormText color="danger">{formErrors.password}</FormText>
-              )}
-            </FormGroup>
-
-            <Button color="primary" type="submit" className="mt-3 w-100">
-              Place Order
+            <Button color="primary" type="submit" className="mt-4 w-100">
+              Confirm Order (₹{getTotalPrice().toFixed(2)})
             </Button>
-          </Form>
-        </Col>
-      </Row>
+          </Col>
+        </Row>
+      </Form>
     </Container>
   );
 };
