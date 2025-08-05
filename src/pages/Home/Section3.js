@@ -34,7 +34,9 @@ const Section3 = forwardRef((props, ref) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_BASE_URL}/api/products`
+        );
         setProductData(res.data);
         setLoading(false);
       } catch (error) {
@@ -97,7 +99,7 @@ const Section3 = forwardRef((props, ref) => {
             <Cards
               key={cardData._id}
               id={cardData._id}
-              image={`http://localhost:5000${cardData.image}`}
+              image={`${process.env.REACT_APP_API_BASE_URL}${cardData.image}`}
               rating={cardData.rating}
               title={cardData.title}
               paragraph={cardData.paragraph}
