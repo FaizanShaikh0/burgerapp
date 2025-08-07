@@ -1,0 +1,60 @@
+/* src/components/Layouts/CardSkeleton.css */
+.skeleton {
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150px;
+  height: 100%;
+  width: 150px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-image {
+  height: 180px;
+  width: 100%;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 80%;
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton-price {
+  height: 18px;
+}
+
+.skeleton-icon {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+}
+
+.skeleton-button {
+  height: 30px;
+  width: 60px;
+  border-radius: 6px;
+}

@@ -1,11 +1,13 @@
+// src/sections/Section3.jsx
+
 import React, { forwardRef, useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import axios from "axios";
 
 import Cards from "../../components/Layouts/Cards";
+import CardSkeleton from "../../components/CardSkeleton";
 import { Link } from "react-router-dom";
 
-// Rating Logical Data
 const renderRatingIcons = (rating) => {
   const stars = [];
   let remainingRating = rating;
@@ -30,17 +32,23 @@ const Section3 = forwardRef((props, ref) => {
   const [burgerPerPage] = useState(8);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchBurger, setSearchBurger] = useState("");
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError(null); // clear previous error
+        // const res = await axios.get("http://localhost:5000/api/products");
         const res = await axios.get(
           `${process.env.REACT_APP_API_BASE_URL}/api/products`
         );
         setProductData(res.data);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("Failed to load products. Please try again later.");
+      } finally {
         setLoading(false);
-      } catch (error) {
-        console.error("Error fetching products:", error);
       }
     };
     fetchData();
@@ -53,9 +61,9 @@ const Section3 = forwardRef((props, ref) => {
 
   const handlePageChange = (page) => setCurrentPage(page);
 
-  const searchData = productData.filter((data) => {
-    return data.title.toLowerCase().includes(searchBurger.toLowerCase());
-  });
+  const searchData = productData.filter((data) =>
+    data.title.toLowerCase().includes(searchBurger.toLowerCase())
+  );
 
   return (
     <section className="menu_section" ref={ref} id="section3">
@@ -95,58 +103,78 @@ const Section3 = forwardRef((props, ref) => {
         </Row>
 
         <Row>
-          {searchData.slice(start, end).map((cardData) => (
-            <Cards
-              key={cardData._id}
-              id={cardData._id}
-              image={`${process.env.REACT_APP_API_BASE_URL}${cardData.image}`}
-              rating={cardData.rating}
-              title={cardData.title}
-              paragraph={cardData.paragraph}
-              price={cardData.price}
-              renderRatingIcons={renderRatingIcons}
-            />
-          ))}
-          <nav aria-label="Page navigation example">
-            <ul className="pagination justify-content-center mt-3">
-              <li
-                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
-              >
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  Prev
-                </button>
-              </li>
-              {pages.map((n) => (
+          {loading ? (
+            [...Array(8)].map((_, i) => <CardSkeleton key={i} />)
+          ) : error ? (
+            <Col className="text-center py-5">
+              <h4 className="text-danger">⚠️ {error}</h4>
+              <p>
+                The server might be waking up or facing issues. Please try
+                again.
+              </p>
+            </Col>
+          ) : searchData.length === 0 ? (
+            <Col className="text-center py-5">
+              <h4 className="text-muted">No burgers found 😕</h4>
+              <p>Try adjusting your search or filters.</p>
+            </Col>
+          ) : (
+            searchData.slice(start, end).map((cardData) => (
+              <Cards
+                key={cardData._id}
+                id={cardData._id}
+                // image={`http://localhost:5000${cardData.image}`}
+                image={`${process.env.REACT_APP_API_BASE_URL}${cardData.image}`}
+                rating={cardData.rating}
+                title={cardData.title}
+                paragraph={cardData.paragraph}
+                price={cardData.price}
+                renderRatingIcons={renderRatingIcons}
+              />
+            ))
+          )}
+
+          {!loading && searchData.length > 0 && (
+            <nav aria-label="Page navigation example">
+              <ul className="pagination justify-content-center mt-3">
                 <li
-                  key={n}
-                  className={`page-item ${currentPage === n ? "active" : ""}`}
+                  className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
                 >
                   <button
                     className="page-link"
-                    onClick={() => handlePageChange(n)}
+                    onClick={() => handlePageChange(currentPage - 1)}
                   >
-                    {n}
+                    Prev
                   </button>
                 </li>
-              ))}
-              <li
-                className={`page-item ${
-                  currentPage === totalPage ? "disabled" : ""
-                }`}
-              >
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPage}
+                {pages.map((n) => (
+                  <li
+                    key={n}
+                    className={`page-item ${currentPage === n ? "active" : ""}`}
+                  >
+                    <button
+                      className="page-link"
+                      onClick={() => handlePageChange(n)}
+                    >
+                      {n}
+                    </button>
+                  </li>
+                ))}
+                <li
+                  className={`page-item ${
+                    currentPage === totalPage ? "disabled" : ""
+                  }`}
                 >
-                  Next
-                </button>
-              </li>
-            </ul>
-          </nav>
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                  >
+                    Next
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          )}
         </Row>
 
         <Row className="pt-5">

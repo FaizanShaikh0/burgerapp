@@ -53,14 +53,24 @@ const Cart = () => {
 
   // Function to handle checkout
   const handleCheckout = () => {
-    navigate('/checkout-page'); // Redirect to the checkout form
+    navigate("/checkout-page"); // Redirect to the checkout form
   };
 
   return (
     <div className="cart-container py-4">
       <Container fluid>
+        <div className="position-relative">
+          <Link
+            to="/"
+            className="btn btn-outline-dark position-absolute top-0 start-0 m-3"
+          >
+            <FaArrowLeft className="me-2" />
+            Back to Menu
+          </Link>
+        </div>
+
         <div className="cart-header mb-4">
-          <h2 className="text-center">Shopping Cart</h2>
+          <h2 className="text-center text-capitalize">Your Cart</h2>
           <p className="text-center text-muted">
             {cartItems.length > 0
               ? `You have ${totalItems} items in your cart`
@@ -229,7 +239,11 @@ const Cart = () => {
                 </div>
 
                 <div className="d-grid gap-2">
-                  <Button variant="warning" className="mb-2 fw-bold" onClick={handleCheckout}>
+                  <Button
+                    variant="warning"
+                    className="mb-2 fw-bold"
+                    onClick={handleCheckout}
+                  >
                     PROCEED TO CHECKOUT
                   </Button>
                   <Link to="/" className="btn btn-outline-secondary">

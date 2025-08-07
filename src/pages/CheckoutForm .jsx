@@ -91,18 +91,15 @@ const CheckoutForm = () => {
     }
 
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/api/orders`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            customer: formData,
-            cartItems,
-            total: getTotalPrice(),
-          }),
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer: formData,
+          cartItems,
+          total: getTotalPrice(),
+        }),
+      });
 
       const data = await response.json();
 
@@ -114,19 +111,17 @@ const CheckoutForm = () => {
         description: "Food Order",
         order_id: data.razorpayOrder.id,
         handler: async function (response) {
-          await fetch(
-            `${process.env.REACT_APP_API_BASE_URL}/api/verify`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-                orderId: data.orderId,
-              }),
-            }
-          );
+          // Verify signature
+          await fetch("http://localhost:5000/api/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              orderId: data.orderId,
+            }),
+          });
 
           setCartItems([]);
           navigate("/checkout-success");
