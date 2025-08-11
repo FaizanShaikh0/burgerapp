@@ -48,10 +48,10 @@ const Section3 = forwardRef((props, ref) => {
       try {
         setLoading(true);
         setError(null);
-        // const res = await axios.get(
-        //   `${process.env.REACT_APP_API_BASE_URL}/api/products`
-        // );
-        const res = await axios.get("http://localhost:5000/api/products");
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_BASE_URL}/api/products`
+        );
+        // const res = await axios.get("http://localhost:5000/api/products");
         setProductData(res.data);
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -133,8 +133,8 @@ const Section3 = forwardRef((props, ref) => {
               <Cards
                 key={cardData._id}
                 id={cardData._id}
-                // image={`${process.env.REACT_APP_API_BASE_URL}${cardData.image}`}
-                image={`http://localhost:5000${cardData.image}`}
+                image={`${process.env.REACT_APP_API_BASE_URL}${cardData.image}`}
+                // image={`http://localhost:5000${cardData.image}`}
                 rating={cardData.rating}
                 title={cardData.title}
                 paragraph={cardData.paragraph}
