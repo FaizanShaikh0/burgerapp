@@ -40,7 +40,7 @@ function Cards({
     <>
       <Col sm={6} lg={4} xl={3} className="mb-4">
         <Card className="overflow-hidden">
-          <Card.Img variant="top" src={image} />
+          <Card.Img variant="top" src={image} loading="lazy" />
           <Card.Body>
             <div className="d-flex align-items-center justify-content-between">
               <div className="item_rating">{renderRatingIcons(rating)}</div>

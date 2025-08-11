@@ -1,9 +1,7 @@
 // src/sections/Section3.jsx
-
 import React, { forwardRef, useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import axios from "axios";
-
 import Cards from "../../components/Layouts/Cards";
 import CardSkeleton from "../../components/CardSkeleton";
 import { Link } from "react-router-dom";
@@ -17,10 +15,10 @@ const renderRatingIcons = (rating) => {
       stars.push(<i key={i} className="bi bi-star-fill"></i>);
       remainingRating--;
     } else if (remainingRating > 0 && remainingRating < 1) {
-      stars.push(<i key={"half"} className="bi bi-star-half"></i>);
+      stars.push(<i key={`half-${i}`} className="bi bi-star-half"></i>);
       remainingRating--;
     } else {
-      stars.push(<i key={`empty${i}`} className="bi bi-star"></i>);
+      stars.push(<i key={`empty-${i}`} className="bi bi-star"></i>);
     }
   }
   return stars;
@@ -32,17 +30,28 @@ const Section3 = forwardRef((props, ref) => {
   const [burgerPerPage] = useState(8);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchBurger, setSearchBurger] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [error, setError] = useState(null);
 
+  // Debounce the search input (300ms delay)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchBurger);
+      setCurrentPage(1); // Reset to first page when searching
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchBurger]);
+
+  // Fetch data once on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null); // clear previous error
-        // const res = await axios.get("http://localhost:5000/api/products");
-        const res = await axios.get(
-          `${process.env.REACT_APP_API_BASE_URL}/api/products`
-        );
+        setError(null);
+        // const res = await axios.get(
+        //   `${process.env.REACT_APP_API_BASE_URL}/api/products`
+        // );
+        const res = await axios.get("http://localhost:5000/api/products");
         setProductData(res.data);
       } catch (err) {
         console.error("Error fetching products:", err);
@@ -52,18 +61,19 @@ const Section3 = forwardRef((props, ref) => {
       }
     };
     fetchData();
-  }, [searchBurger]);
+  }, []);
+
+  // Filtered and paginated products
+  const filteredData = productData.filter((data) =>
+    data.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+  );
 
   const end = currentPage * burgerPerPage;
   const start = end - burgerPerPage;
-  const totalPage = Math.ceil(productData.length / burgerPerPage);
+  const totalPage = Math.ceil(filteredData.length / burgerPerPage);
   const pages = Array.from({ length: totalPage }, (_, i) => i + 1);
 
   const handlePageChange = (page) => setCurrentPage(page);
-
-  const searchData = productData.filter((data) =>
-    data.title.toLowerCase().includes(searchBurger.toLowerCase())
-  );
 
   return (
     <section className="menu_section" ref={ref} id="section3">
@@ -113,28 +123,29 @@ const Section3 = forwardRef((props, ref) => {
                 again.
               </p>
             </Col>
-          ) : searchData.length === 0 ? (
+          ) : filteredData.length === 0 ? (
             <Col className="text-center py-5">
               <h4 className="text-muted">No burgers found 😕</h4>
               <p>Try adjusting your search or filters.</p>
             </Col>
           ) : (
-            searchData.slice(start, end).map((cardData) => (
+            filteredData.slice(start, end).map((cardData) => (
               <Cards
                 key={cardData._id}
                 id={cardData._id}
-                // image={`http://localhost:5000${cardData.image}`}
-                image={`${process.env.REACT_APP_API_BASE_URL}${cardData.image}`}
+                // image={`${process.env.REACT_APP_API_BASE_URL}${cardData.image}`}
+                image={`http://localhost:5000${cardData.image}`}
                 rating={cardData.rating}
                 title={cardData.title}
                 paragraph={cardData.paragraph}
                 price={cardData.price}
                 renderRatingIcons={renderRatingIcons}
+                lazyLoad={true} // For lazy loading (if used in Cards component)
               />
             ))
           )}
 
-          {!loading && searchData.length > 0 && (
+          {!loading && filteredData.length > 0 && (
             <nav aria-label="Page navigation example">
               <ul className="pagination justify-content-center mt-3">
                 <li
@@ -150,7 +161,9 @@ const Section3 = forwardRef((props, ref) => {
                 {pages.map((n) => (
                   <li
                     key={n}
-                    className={`page-item ${currentPage === n ? "active" : ""}`}
+                    className={`page-item ${
+                      currentPage === n ? "active" : ""
+                    }`}
                   >
                     <button
                       className="page-link"
